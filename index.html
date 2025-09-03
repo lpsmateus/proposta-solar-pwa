@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#16a34a" />
+  <title>Proposta Solar</title>
+
+  <!-- Manifest e ícones -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192.png" sizes="192x192">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <!-- Estilos (sem dependências externas) -->
+  <style>
+    :root{--bg:#f1f5f9;--card:#fff;--muted:#64748b;--brand:#16a34a;--text:#0f172a}
+    *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif}
+    body{margin:0;background:var(--bg);color:var(--text)}
+    .wrap{max-width:1100px;margin:0 auto;padding:24px;display:grid;grid-template-columns:1fr;gap:24px}
+    @media(min-width:1024px){.wrap{grid-template-columns:2fr 3fr}}
+    .card{background:#fff;border-radius:16px;box-shadow:0 6px 20px rgba(2,8,23,.08);padding:20px}
+    .a4{width:794px;background:#fff;border-radius:16px;box-shadow:0 6px 20px rgba(2,8,23,.08);overflow:hidden}
+    @media(max-width:820px){.a4{width:100%}}
+    h1{font-size:22px;margin:0 0 6px}
+    h2{font-size:20px;margin:0 0 10px}
+    h3{font-size:16px;margin:0 0 8px}
+    label{font-size:12px;color:var(--muted)}
+    input,select,textarea{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:12px;font-size:14px}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .btn{display:inline-flex;align-items:center;gap:8px;background:var(--brand);color:#fff;border:none;border-radius:12px;padding:10px 14px;font-weight:600;cursor:pointer}
+    .header{color:#fff;background:linear-gradient(135deg,#16a34a,#000);padding:18px}
+    .flex{display:flex;align-items:center;gap:12px}
+    .grow{flex:1}
+    .right{text-align:right}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .muted{color:var(--muted);font-size:12px}
+    .kv{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:14px}
+    .kv div:nth-child(odd){color:var(--muted)}
+    ul{margin:8px 0 0 18px;padding:0}
+    .total{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
+    .total .price{font-size:22px;color:#065f46;font-weight:800}
+  </style>
+
+  <!-- libs para imagem e PDF -->
+  <script defer src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <!-- Painel -->
+    <aside class="card">
+      <h2>Configurar proposta</h2>
+      <div class="grid2">
+        <label>Nome do cliente</label>
+        <label>Cidade</label>
+        <input id="in-cliente" placeholder="Ex.: Maria Silva" />
+        <input id="in-cidade" placeholder="Ex.: Castanhal-PA" />
+
+        <label>Consumo (kWh/mês)</label>
+        <label>Data</label>
+        <div class="grid2" style="grid-template-columns:1fr 1fr">
+          <select id="in-kwh"></select>
+          <input id="in-kwh-free" type="number" placeholder="ou digite" />
+        </div>
+        <input id="in-data" />
+
+        <label style="grid-column:1/-1">Observações (opcional)</label>
+        <textarea id="in-obs" rows="3" placeholder="Ex.: Preço válido por 10 dias; não inclui reforço estrutural..."></textarea>
+      </div>
+      <div style="padding-top:10px"><button id="btn-pdf" class="btn">Exportar PDF</button></div>
+      <p class="muted">Dica: instale como app (Adicionar à Tela Inicial).</p>
+    </aside>
+
+    <!-- Páginas -->
+    <main class="space-y-6">
+      <!-- Página 1 -->
+      <div id="page1" class="a4">
+        <div class="header">
+          <div class="flex">
+            <div class="grow">
+              <h1>Proposta Comercial – Sistema Fotovoltaico</h1>
+              <div class="muted" id="empresa-nome">Broker Fotovoltaico LTDA</div>
+            </div>
+            <div class="right">
+              <div class="muted">Data</div>
+              <div id="out-data" style="font-weight:700"></div>
+            </div>
+          </div>
+        </div>
+        <div style="padding:18px" class="space-y-6">
+          <section class="row">
+            <div>
+              <h3>Dados do Cliente</h3>
+              <div class="kv">
+                <div>Nome:</div><div id="out-cliente">—</div>
+                <div>Cidade:</div><div id="out-cidade">—</div>
+                <div>Consumo:</div><div id="out-kwh">—</div>
+                <div>Potência do Sistema:</div><div id="out-kwp">—</div>
+                <div>Nº de Módulos:</div><div id="out-mod">—</div>
+                <div>Qtd. Inversores:</div><div id="out-qinv">—</div>
+                <div>Modelo Inversor:</div><div id="out-inv">—</div>
+                <div>Modelo Módulo:</div><div id="out-modulo">—</div>
+              </div>
+            </div>
+            <div>
+              <h3>Orçamento</h3>
+              <div style="border:1px solid #e2e8f0;border-radius:12px;padding:12px;background:#f8fafc">
+                <div class="muted">Itens Inclusos</div>
+                <ul>
+                  <li id="out-inv-list">Inversor incluso</li>
+                  <li id="out-mod-list">Módulos fotovoltaicos inclusos</li>
+                  <li>Estrutura de fixação para telhado</li>
+                  <li>Homologação junto à concessionária</li>
+                  <li>Projeto, Instalação e Material elétrico</li>
+                  <li>Monitoramento e Assessoria de obras</li>
+                </ul>
+                <div class="total"><span class="muted">Total</span><span class="price" id="out-preco">—</span></div>
+                <div class="muted" id="out-obs" style="margin-top:6px"></div>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h3>Prazo de Entrega</h3>
+            <div class="muted">Sistema homologado e operando: prazo médio de <b>35 dias</b>.</div>
+          </section>
+
+          <section>
+            <h3>Garantias</h3>
+            <ul class="kv" style="grid-template-columns:1fr 2fr">
+              <div>Módulos (eficiência):</div><div><b>30 anos</b>.</div>
+              <div>Módulos (fabricação):</div><div><b>15 anos</b>.</div>
+              <div>Inversores:</div><div>10 anos.</div>
+              <div>Estrutura:</div><div>10 anos.</div>
+              <div>Serviço de instalação:</div><div>1 ano.</div>
+            </ul>
+          </section>
+        </div>
+      </div>
+
+      <!-- Página 2 -->
+      <div id="page2" class="a4" style="padding:24px">
+        <h2 style="color:#16a34a">Condições Comerciais</h2>
+        <ul>
+          <li><b>Forma de pagamento:</b> À vista, financiamento ou cartão de crédito.</li>
+          <li><b>Validade:</b> 10 dias.</li>
+          <li><b>Prazo de instalação:</b> 35 dias.</li>
+          <li><b>Garantias:</b> conforme página anterior.</li>
+        </ul>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // ===== Tabela base dos kits =====
+    const TABELA = [
+      { kwh: 500,  kwp: 4.865,  mod: 7,  qInv: 1, inversor: 'INVERSOR HUAWEI 5KW',  modulo: 'TRINA SOLAR 695W - NTYPE-TIER1', preco: 14461.47 },
+      { kwh: 600,  kwp: 5.56,   mod: 8,  qInv: 1, inversor: 'INVERSOR HUAWEI 5KW',  modulo: 'TRINA SOLAR 695W - NTYPE-TIER1', preco: 14773.78 },
+      { kwh: 700,  kwp: 6.95,   mod: 10, qInv: 1, inversor: 'INVERSOR HUAWEI 6KW',  modulo: 'TRINA SOLAR 695W - NTYPE-TIER1', preco: 17110.70 },
+      { kwh: 900,  kwp: 8.34,   mod: 12, qInv: 1, inversor: 'INVERSOR HUAWEI 6KW',  modulo: 'TRINA SOLAR 695W - NTYPE-TIER1', preco: 18992.52 },
+      { kwh: 1000, kwp: 9.73,   mod: 14, qInv: 1, inversor: 'INVERSOR HUAWEI 7.5 KW', modulo: 'TRINA SOLAR 695W - NTYPE-TIER1', preco: 22311.46 },
+      { kwh: 1200, kwp: 11.12,  mod: 16, qInv: 1, inversor: 'INVERSOR HUAWEI 7.5 KW', modulo: 'TRINA SOLAR 695W - NTYPE-TIER1', preco: 24314.10 },
+      { kwh: 1300, kwp: 12.51,  mod: 18, qInv: 1, inversor: 'INVERSOR HUAWEI 10 KW', modulo: 'TRINA SOLAR 695W - NTYPE-TIER1', preco: 27178.70 },
+      { kwh: 1500, kwp: 13.90,  mod: 20, qInv: 1, inversor: 'INVERSOR HUAWEI 10 KW', modulo: 'TRINA SOLAR 695W - NTYPE-TIER1', preco: 29181.32 },
+      { kwh: 1600, kwp: 15.29,  mod: 22, qInv: 2, inversor: 'INVERSOR HUAWEI 6 KW',  modulo: 'TRINA SOLAR 695W - NTYPE-TIER1', preco: 33459.43 },
+      { kwh: 1700, kwp: 15.985, mod: 23, qInv: 2, inversor: 'INVERSOR HUAWEI 6 KW',  modulo: 'TRINA SOLAR 695W - NTYPE-TIER1', preco: 34466.71 },
+    ];
+
+    // ===== UI / Bindings =====
+    const selKwh = document.getElementById('in-kwh');
+    function fmtBRL(n){return n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
+    function preencherSelect(){
+      selKwh.innerHTML = TABELA.map(r=>{
+        const preco = fmtBRL(r.preco);
+        const kwp = r.kwp.toLocaleString('pt-BR');
+        return `<option value="${r.kwh}">${r.kwh} kWh — ${r.mod}x ${r.modulo} — ${r.qInv}x ${r.inversor} — ${kwp} kWp — ${preco}</option>`;
+      }).join('');
+    }
+    preencherSelect();
+
+    document.getElementById('in-kwh-free').addEventListener('input', (e)=>{
+      const v = Number(e.target.value);
+      if(!isNaN(v) && v>0){
+        const r = buscarMaisProximo(v);
+        selKwh.value = String(r.kwh);
+        atualizar(v);
+      }
+    });
+    selKwh.addEventListener('change', e=>atualizar(Number(e.target.value)));
+
+    document.getElementById('in-data').value = new Date().toLocaleDateString('pt-BR');
+    document.getElementById('in-obs').addEventListener('input',(e)=>{document.getElementById('out-obs').textContent=e.target.value;});
+    ['in-cliente','in-cidade','in-data'].forEach(id=> document.getElementById(id).addEventListener('input', sync));
+
+    function sync(){
+      document.getElementById('out-cliente').textContent = document.getElementById('in-cliente').value || '—';
+      document.getElementById('out-cidade').textContent  = document.getElementById('in-cidade').value || '—';
+      document.getElementById('out-data').textContent    = document.getElementById('in-data').value || '—';
+    }
+
+    function buscarMaisProximo(v){
+      const ex = TABELA.find(r=>r.kwh===v);
+      if(ex) return ex;
+      return TABELA.reduce((p,c)=> Math.abs(c.kwh-v) < Math.abs(p.kwh-v) ? c : p, TABELA[0]);
+    }
+
+    function atualizar(kwh){
+      const r = buscarMaisProximo(kwh);
+      document.getElementById('out-kwh').textContent = `${kwh} kWh/mês`;
+      document.getElementById('out-kwp').textContent = `${r.kwp.toLocaleString('pt-BR')} kWp`;
+      document.getElementById('out-mod').textContent = r.mod;
+      document.getElementById('out-qinv').textContent = r.qInv;
+      document.getElementById('out-inv').textContent = r.inversor;
+      document.getElementById('out-modulo').textContent = r.modulo;
+      document.getElementById('out-inv-list').textContent = `${r.qInv}x ${r.inversor}`;
+      document.getElementById('out-mod-list').textContent = `${r.mod}x ${r.modulo}`;
+      document.getElementById('out-preco').textContent = fmtBRL(r.preco);
+      [...selKwh.options].forEach(o=>{if(Number(o.value)===r.kwh) selKwh.value=o.value;});
+    }
+
+    // inicial
+    sync(); selKwh.value='700'; atualizar(700);
+
+    // Exporta PDF (2 páginas)
+    document.getElementById('btn-pdf').addEventListener('click', async ()=>{
+      const { jsPDF } = window.jspdf;
+      const opts = { backgroundColor:'#fff', pixelRatio:2.5 };
+      const p1 = await htmlToImage.toPng(document.getElementById('page1'), opts);
+      const p2 = await htmlToImage.toPng(document.getElementById('page2'), opts);
+      const doc = new jsPDF({orientation:'p',unit:'mm',format:'a4'});
+      const w = doc.internal.pageSize.getWidth();
+      const i1=new Image(); i1.src=p1; await i1.decode(); const h1=w*(i1.height/i1.width); doc.addImage(p1,'PNG',0,0,w,h1);
+      doc.addPage(); const i2=new Image(); i2.src=p2; await i2.decode(); const h2=w*(i2.height/i2.width); doc.addImage(p2,'PNG',0,0,w,h2);
+      const nome=(document.getElementById('in-cliente').value||'Cliente').replace(/\s+/g,'_');
+      const kwh=(document.getElementById('out-kwh').textContent.split(' ')[0]);
+      doc.save(`Proposta_${nome}_${kwh}kWh.pdf`);
+    });
+
+    // PWA: registra Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', ()=> navigator.serviceWorker.register('service-worker.js'));
+    }
+  </script>
+</body>
+</html>
