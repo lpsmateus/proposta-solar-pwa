@@ -21,7 +21,14 @@
     .wrap{max-width:1100px;margin:0 auto;padding:24px;display:grid;grid-template-columns:1fr;gap:24px}
     @media(min-width:1024px){.wrap{grid-template-columns:2fr 3fr}}
     .card{background:#fff;border-radius:16px;box-shadow:0 6px 20px rgba(2,8,23,.08);padding:20px}
-    .a4{width:794px;background:#fff;border-radius:16px;box-shadow:0 6px 20px rgba(2,8,23,.08);overflow:hidden}
+    .a4{
+      width: 794px;          /* ~210mm a ~96dpi */
+      height: 1123px;        /* ~297mm a ~96dpi */
+      background:#fff;
+      border-radius:16px;
+      box-shadow:0 6px 20px rgba(2,8,23,.08);
+      overflow:hidden;       /* impede crescimento vertical que cortava no PDF */
+    }
     @media(max-width:820px){.a4{width:100%}}
     h1{font-size:22px;margin:0 0 6px}
     h2{font-size:20px;margin:0 0 10px}
@@ -223,22 +230,45 @@
     // inicial
     sync(); selKwh.value='700'; atualizar(700);
 
-    // Exporta PDF (2 páginas)
+    // ===== Helper: adiciona imagem no PDF “contain” (sem cortar) =====
+    async function addFitImageToPdf(doc, imgData, addPage=false){
+      if(addPage) doc.addPage();
+      const img = new Image();
+      img.src = imgData;
+      await img.decode();
+
+      const iw = img.width, ih = img.height;
+      const pageW = doc.internal.pageSize.getWidth();
+      const pageH = doc.internal.pageSize.getHeight();
+
+      const scale = Math.min(pageW / iw, pageH / ih); // cabe nos 2 eixos
+      const w = iw * scale, h = ih * scale;
+      const x = (pageW - w) / 2, y = (pageH - h) / 2;
+
+      doc.addImage(imgData, 'PNG', x, y, w, h);
+    }
+
+    // ===== Exportar PDF (ajustado) =====
     document.getElementById('btn-pdf').addEventListener('click', async ()=>{
       const { jsPDF } = window.jspdf;
-      const opts = { backgroundColor:'#fff', pixelRatio:2.5 };
+
+      // Se ainda cortar no iPhone, reduza para 1.5
+      const opts = { backgroundColor:'#fff', pixelRatio: 2.0 };
+
       const p1 = await htmlToImage.toPng(document.getElementById('page1'), opts);
       const p2 = await htmlToImage.toPng(document.getElementById('page2'), opts);
-      const doc = new jsPDF({orientation:'p',unit:'mm',format:'a4'});
-      const w = doc.internal.pageSize.getWidth();
-      const i1=new Image(); i1.src=p1; await i1.decode(); const h1=w*(i1.height/i1.width); doc.addImage(p1,'PNG',0,0,w,h1);
-      doc.addPage(); const i2=new Image(); i2.src=p2; await i2.decode(); const h2=w*(i2.height/i2.width); doc.addImage(p2,'PNG',0,0,w,h2);
-      const nome=(document.getElementById('in-cliente').value||'Cliente').replace(/\s+/g,'_');
-      const kwh=(document.getElementById('out-kwh').textContent.split(' ')[0]);
+
+      const doc = new jsPDF({orientation:'p', unit:'mm', format:'a4'});
+
+      await addFitImageToPdf(doc, p1, false);
+      await addFitImageToPdf(doc, p2, true);
+
+      const nome = (document.getElementById('in-cliente').value || 'Cliente').replace(/\s+/g,'_');
+      const kwh  = (document.getElementById('out-kwh').textContent.split(' ')[0]);
       doc.save(`Proposta_${nome}_${kwh}kWh.pdf`);
     });
 
-    // PWA: registra Service Worker
+    // PWA: registra o Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', ()=> navigator.serviceWorker.register('service-worker.js'));
     }
