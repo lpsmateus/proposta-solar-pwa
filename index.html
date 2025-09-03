@@ -22,12 +22,9 @@
     @media(min-width:1024px){.wrap{grid-template-columns:2fr 3fr}}
     .card{background:#fff;border-radius:16px;box-shadow:0 6px 20px rgba(2,8,23,.08);padding:20px}
     .a4{
-      width: 794px;     /* 210mm em ~96dpi */
-      height: 1123px;   /* 297mm em ~96dpi */
-      background:#fff;
-      border-radius:16px;
-      box-shadow:0 6px 20px rgba(2,8,23,.08);
-      overflow:hidden;
+      width: 794px; height: 1123px; /* A4 em px ~96dpi */
+      background:#fff;border-radius:16px;
+      box-shadow:0 6px 20px rgba(2,8,23,.08);overflow:hidden;
     }
     @media(max-width:820px){.a4{width:100%}}
     h1{font-size:22px;margin:0 0 6px}
@@ -37,9 +34,8 @@
     input,select,textarea{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:12px;font-size:14px}
     .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     .btn{display:inline-flex;align-items:center;gap:8px;background:var(--brand);color:#fff;border:none;border-radius:12px;padding:10px 14px;font-weight:600;cursor:pointer}
-    .header{color:#fff;background:linear-gradient(135deg,#16a34a,#000);padding:18px}
-    .flex{display:flex;align-items:center;gap:12px}
-    .grow{flex:1}
+    .header{color:#fff;background:linear-gradient(135deg,#16a34a,#000);padding:18px;display:flex;align-items:center;justify-content:space-between}
+    .header img{height:48px}
     .right{text-align:right}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:18px}
     .muted{color:var(--muted);font-size:12px}
@@ -84,18 +80,14 @@
       <!-- Página 1 -->
       <div id="page1" class="a4">
         <div class="header">
-          <div class="flex">
-            <div class="grow">
-              <h1>Proposta Comercial – Sistema Fotovoltaico</h1>
-              <div class="muted" id="empresa-nome">Broker Fotovoltaico LTDA</div>
-            </div>
-            <div class="right">
-              <div class="muted">Data</div>
-              <div id="out-data" style="font-weight:700"></div>
-            </div>
+          <img src="logo.png" alt="Logo Broker Energia">
+          <div class="right">
+            <div class="muted">Data</div>
+            <div id="out-data" style="font-weight:700"></div>
           </div>
         </div>
         <div style="padding:18px" class="space-y-6">
+          <h1>Proposta Comercial – Sistema Fotovoltaico</h1>
           <section class="row">
             <div>
               <h3>Dados do Cliente</h3>
@@ -160,15 +152,29 @@
   </div>
 
   <script>
+    // ===== Tabela base dos kits (COMPLETA) =====
     const TABELA = [
-      { kwh:500, kwp:4.865, mod:7, qInv:1, inversor:'INVERSOR HUAWEI 5KW', modulo:'TRINA SOLAR 695W', preco:14461.47 },
-      { kwh:700, kwp:6.95, mod:10, qInv:1, inversor:'INVERSOR HUAWEI 6KW', modulo:'TRINA SOLAR 695W', preco:17110.70 }
-      // ...adicione os demais kits
+      { kwh: 500,  kwp: 4.865,  mod: 7,  qInv: 1, inversor: 'INVERSOR HUAWEI 5KW',   modulo: 'TRINA SOLAR 695W - NTYPE-TIER1', preco: 14461.47 },
+      { kwh: 600,  kwp: 5.56,   mod: 8,  qInv: 1, inversor: 'INVERSOR HUAWEI 5KW',   modulo: 'TRINA SOLAR 695W - NTYPE-TIER1', preco: 14773.78 },
+      { kwh: 700,  kwp: 6.95,   mod: 10, qInv: 1, inversor: 'INVERSOR HUAWEI 6KW',   modulo: 'TRINA SOLAR 695W - NTYPE-TIER1', preco: 17110.70 },
+      { kwh: 900,  kwp: 8.34,   mod: 12, qInv: 1, inversor: 'INVERSOR HUAWEI 6KW',   modulo: 'TRINA SOLAR 695W - NTYPE-TIER1', preco: 18992.52 },
+      { kwh: 1000, kwp: 9.73,   mod: 14, qInv: 1, inversor: 'INVERSOR HUAWEI 7.5 KW',modulo: 'TRINA SOLAR 695W - NTYPE-TIER1', preco: 22311.46 },
+      { kwh: 1200, kwp: 11.12,  mod: 16, qInv: 1, inversor: 'INVERSOR HUAWEI 7.5 KW',modulo: 'TRINA SOLAR 695W - NTYPE-TIER1', preco: 24314.10 },
+      { kwh: 1300, kwp: 12.51,  mod: 18, qInv: 1, inversor: 'INVERSOR HUAWEI 10 KW', modulo: 'TRINA SOLAR 695W - NTYPE-TIER1', preco: 27178.70 },
+      { kwh: 1500, kwp: 13.90,  mod: 20, qInv: 1, inversor: 'INVERSOR HUAWEI 10 KW', modulo: 'TRINA SOLAR 695W - NTYPE-TIER1', preco: 29181.32 },
+      { kwh: 1600, kwp: 15.29,  mod: 22, qInv: 2, inversor: 'INVERSOR HUAWEI 6 KW',  modulo: 'TRINA SOLAR 695W - NTYPE-TIER1', preco: 33459.43 },
+      { kwh: 1700, kwp: 15.985, mod: 23, qInv: 2, inversor: 'INVERSOR HUAWEI 6 KW',  modulo: 'TRINA SOLAR 695W - NTYPE-TIER1', preco: 34466.71 },
     ];
 
     const selKwh=document.getElementById('in-kwh');
     function fmtBRL(n){return n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
-    selKwh.innerHTML=TABELA.map(r=>`<option value=\"${r.kwh}\">${r.kwh} kWh — ${r.mod}x ${r.modulo} — ${r.qInv}x ${r.inversor} — ${fmtBRL(r.preco)}</option>`).join('');
+    function preencherSelect(){
+      selKwh.innerHTML = TABELA.map(r=>{
+        const preco = fmtBRL(r.preco);
+        return `<option value="${r.kwh}">${r.kwh} kWh — ${r.mod}x ${r.modulo} — ${r.qInv}x ${r.inversor} — ${r.kwp} kWp — ${preco}</option>`;
+      }).join('');
+    }
+    preencherSelect();
 
     function buscarMaisProximo(v){return TABELA.reduce((p,c)=>Math.abs(c.kwh-v)<Math.abs(p.kwh-v)?c:p,TABELA[0]);}
     function atualizar(kwh){
@@ -186,6 +192,15 @@
     selKwh.addEventListener('change',e=>atualizar(Number(e.target.value)));
     atualizar(500);
 
+    document.getElementById('in-data').value = new Date().toLocaleDateString('pt-BR');
+    document.getElementById('in-obs').addEventListener('input',(e)=>{document.getElementById('out-obs').textContent=e.target.value;});
+    ['in-cliente','in-cidade','in-data'].forEach(id=> document.getElementById(id).addEventListener('input', sync));
+    function sync(){
+      document.getElementById('out-cliente').textContent=document.getElementById('in-cliente').value||'—';
+      document.getElementById('out-cidade').textContent=document.getElementById('in-cidade').value||'—';
+      document.getElementById('out-data').textContent=document.getElementById('in-data').value||'—';
+    }
+
     // === Exportar PDF (A4 igual em todos devices) ===
     document.getElementById('btn-pdf').addEventListener('click', async ()=>{
       const { jsPDF } = window.jspdf;
@@ -201,7 +216,7 @@
       doc.addPage();
       doc.addImage(p2,'PNG',0,0,pageW,pageH);
 
-      const nome=(document.getElementById('in-cliente').value||'Cliente').replace(/\\s+/g,'_');
+      const nome=(document.getElementById('in-cliente').value||'Cliente').replace(/\s+/g,'_');
       const kwh=(document.getElementById('out-kwh').textContent.split(' ')[0]);
       doc.save(`Proposta_${nome}_${kwh}kWh.pdf`);
     });
